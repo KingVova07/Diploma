@@ -1,3 +1,4 @@
+import json
 
 import requests      # отправка запросов
 import numpy as np   # матрицы, вектора и линал
@@ -13,6 +14,13 @@ import argparse # чтение аргументов из коммандной с
 import socks   # подключение к тору
 import socket
 import sys
+
+
+path = "types.json"
+
+with open(path, 'r') as f:
+    TYPES = json.load(f)
+
 
 
 
@@ -65,7 +73,12 @@ def getProperties(soup):
 
         try:
             for detail in details.findAll('a')[cnt:]:
-                meme_types.append(detail.text.replace(',',''))
+                category = detail.text.replace(',','')
+                meme_types.append(category)
+                if category is not TYPES:
+                    cnt_types = len(TYPES)
+                    TYPES[cnt_types] = category
+
         except:
             meme_types = "Unknown"
 
@@ -149,12 +162,15 @@ if __name__ == '__main__':
              'date_added', 'views', 'videos', 'photos', 'comments',
              'about', 'origin', 'other_text'])
 
-    for i in range(3,4):
+    for i in range(2,4):
         memes = Urls_memes(i)
         print(f'page {i}')
         for meme in memes:
             print(meme)
             final_df = final_df.append(getMemeData(meme), ignore_index=True)
 
-    final_df.to_csv(f'MEMES_{2}_{10}.csv')
+
+    with open(path, 'w') as outfile:
+        json.dump(TYPES, outfile)
+    final_df.to_csv(f'MEMES_{2}_{4}.csv')
 
