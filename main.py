@@ -162,15 +162,30 @@ if __name__ == '__main__':
              'date_added', 'views', 'videos', 'photos', 'comments',
              'about', 'origin', 'other_text'])
 
-    for i in range(2,4):
-        memes = Urls_memes(i)
+    socks.set_default_proxy(socks.SOCKS5, "localhost",9150)
+    socket.socket = socks.socksocket
+
+
+    for i in range(2,102):
+
+        for j in range(5):
+            memes = Urls_memes(i)
+            if memes:
+                break
+            else:
+                time.sleep(20)
+
         print(f'page {i}')
+        cnt = 0
+
         for meme in memes:
             print(meme)
+            cnt += 1
             final_df = final_df.append(getMemeData(meme), ignore_index=True)
 
 
+    print(cnt)
     with open(path, 'w') as outfile:
         json.dump(TYPES, outfile)
-    final_df.to_csv(f'MEMES_{2}_{4}.csv')
+    final_df.to_csv(f'MEMES_{2}_{101}.csv')
 
