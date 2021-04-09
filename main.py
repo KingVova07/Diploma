@@ -12,14 +12,26 @@ from bs4 import BeautifulSoup         # очень красивый суп дл�
 import argparse # чтение аргументов из коммандной строки
 
 import socks   # подключение к тору
+import smtplib
 import socket
 import sys
 
 
-path = "types.json"
+path_types = "types.json"
+path_memes = "memes.json"
 
-with open(path, 'r') as f:
+with open(path_types, 'r') as f:
     TYPES = json.load(f)
+
+with open(path_memes, 'r') as f:
+    MEMES = json.load(f)
+
+
+def checkIP():
+    ip = requests.get('http://checkip.dyndns.org').content
+    soup = BeautifulSoup(ip, 'html.parser')
+    print(soup.find('body').text)
+
 
 
 
@@ -28,6 +40,7 @@ def Urls_memes(number):
 
     url = f'http://knowyourmeme.com/memes/all/page/{number}'
     response = requests.get(url, headers={'User-Agent': UserAgent().chrome})
+
 
     if not response.ok:
         return []
@@ -76,18 +89,16 @@ def getProperties(soup):
                 category = detail.text.replace(',','')
                 meme_types.append(category)
                 if category is not TYPES:
-                    cnt_types = len(TYPES)
-                    TYPES[cnt_types] = category
+                    TYPES.append(category)
 
         except:
             meme_types = "Unknown"
-
-
-
     except:
         meme_name = "Unknown"
         meme_types = "Unknown"
         meme_year = "Unknown"
+
+
 
 
     return meme_name, meme_types, meme_year
@@ -142,8 +153,11 @@ def getMemeData(meme_page):
     date = soup.find('abbr', attrs={'class': 'timeago'}).attrs['title']
 
     meme_name, meme_type, meme_year = getProperties(soup=soup)
+    print(meme_name)
 
     meme_about, meme_origin, other_text = getText(soup=soup)
+    if meme_name == "Unknown":
+        return "error"
 
     data_row = {"name": meme_name, "image" : image_link,
                 "type": meme_type, "origin_year": meme_year,
@@ -151,6 +165,16 @@ def getMemeData(meme_page):
                 "videos": videos, "photos": photos, "comments": comments,
                 "about": meme_about, "origin": meme_origin,
                 "other_text": other_text}
+
+    data_row1 = {"image": image_link,
+                "type": meme_type, "origin_year": meme_year,
+                "date_added": date, "views": views,
+                "videos": videos, "photos": photos, "comments": comments,
+                "about": meme_about, "origin": meme_origin,
+                "other_text": other_text}
+
+    MEMES[meme_name] = data_row1
+
 
     return data_row
 
@@ -162,30 +186,46 @@ if __name__ == '__main__':
              'date_added', 'views', 'videos', 'photos', 'comments',
              'about', 'origin', 'other_text'])
 
+    checkIP()
     socks.set_default_proxy(socks.SOCKS5, "localhost",9150)
     socket.socket = socks.socksocket
 
 
-    for i in range(2,102):
+    for i in range(1,1745):
 
-        for j in range(5):
-            memes = Urls_memes(i)
-            if memes:
-                break
-            else:
-                time.sleep(20)
+            print(i)
+            checkIP()
+            for j in range(5):
+                memes = Urls_memes(i)
+                if memes:
+                    break
+                else:
+                    time.sleep(120)
 
-        print(f'page {i}')
-        cnt = 0
+            print(f'page {i}')
+            cnt = 0
 
-        for meme in memes:
-            print(meme)
-            cnt += 1
-            final_df = final_df.append(getMemeData(meme), ignore_index=True)
+            for meme in memes:
+                try:
+                    if "https" in meme:
+                        continue
+                    print(meme)
+                    cnt += 1
+                    data = getMemeData(meme)
+                    if data == "error":
+                        continue
+                    final_df = final_df.append(data, ignore_index=True)
+                except:
+                    continue
 
 
     print(cnt)
-    with open(path, 'w') as outfile:
+
+    with open(path_types, 'w') as outfile:
         json.dump(TYPES, outfile)
-    final_df.to_csv(f'MEMES_{2}_{101}.csv')
+
+    with open(path_memes, 'w') as outfile:
+        json.dump(MEMES, outfile)
+
+    final_df.to_csv(f'MEMES_{1}_{1745}.csv')
 
