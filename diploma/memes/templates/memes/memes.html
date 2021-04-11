@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ name }}</title>
+</head>
+<body>
+    <h1>
+        {{ name }}
+    </h1>
+    <img src={{ image }} width="512", height="512">
+    <h3> Год создания этого мема: {{ origin_year }}</h3>
+    <h3> Количество просмотров: {{ views }}</h3>
+    <h3> Количество комментариев: {{ comments }}</h3>
+    <h3> Количество картинок с этим мемом: {{ photos }}</h3>
+    <h3> Количество видео с этим мемом: {{ videos }}</h3>
+    <br>
+    <hr>
+    <h3> Происхождение: <br>{{ origin }}</h3>
+    <hr>
+    <h3> Про этот мем: <br>{{ about }}</h3>
+    <hr>
+    <h3> Прочее: <br>{{ other_text}}</h3>
+</body>
+</html>

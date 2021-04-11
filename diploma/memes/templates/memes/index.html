@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ry">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Memes list</title>
@@ -18,7 +18,7 @@
     </form>
     <br>
     {% for meme in memes %}
-        <img src={{ meme.1 }} width="128" height="128">
+        <a href = "{% url 'memes' meme_id=meme.0 %}"><img src={{ meme.1 }} width="128" height="128"></a>
         <a href = "{% url 'memes' meme_id=meme.0 %}">{{ meme.0 }}</a>
         <br>
         <hr>
@@ -28,7 +28,7 @@
     {% for page in pages %}
         <a href = "{% url 'index' page=page %}">{{ page }}</a>&nbsp;
     {% endfor %}
-    &nbsp;&nbsp;&nbsp;&nbsp;<a href = "{% url 'index' page=1 %}">145</a>
+    &nbsp;&nbsp;&nbsp;&nbsp;<a href = "{% url 'index' page=105 %}">105</a>
 
 </body>
 </html>
