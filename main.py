@@ -191,16 +191,12 @@ if __name__ == '__main__':
     socket.socket = socks.socksocket
 
 
-    for i in range(1,1745):
+    for i in range(1,1001):
 
-            print(i)
+
             checkIP()
-            for j in range(5):
-                memes = Urls_memes(i)
-                if memes:
-                    break
-                else:
-                    time.sleep(120)
+
+            memes = Urls_memes(i)
 
             print(f'page {i}')
             cnt = 0
@@ -218,14 +214,16 @@ if __name__ == '__main__':
                 except:
                     continue
 
+            with open(path_types, 'w') as outfile:
+                json.dump(TYPES, outfile)
+
+            with open(path_memes, 'w') as outfile:
+                json.dump(MEMES, outfile)
+
 
     print(cnt)
 
-    with open(path_types, 'w') as outfile:
-        json.dump(TYPES, outfile)
 
-    with open(path_memes, 'w') as outfile:
-        json.dump(MEMES, outfile)
 
-    final_df.to_csv(f'MEMES_{1}_{1745}.csv')
+    final_df.to_csv(f'MEMES_{1}_{1001}.csv')
 
