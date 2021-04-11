@@ -26,6 +26,13 @@ with open(path_types, 'r') as f:
 with open(path_memes, 'r') as f:
     MEMES = json.load(f)
 
+New_MEMES = {}
+memes = list(MEMES.keys())
+for meme in memes:
+    meme1 = meme.replace('/','')
+    meme1 = meme1.replace('\\','')
+    New_MEMES[meme1] = MEMES[meme]
+
 
 def checkIP():
     ip = requests.get('http://checkip.dyndns.org').content
@@ -181,6 +188,12 @@ def getMemeData(meme_page):
 
 
 if __name__ == '__main__':
+    print(len(MEMES))
+    print(len(TYPES))
+
+
+
+
     final_df = pd.DataFrame(
     columns=['name', 'image', 'type', 'origin_year',
              'date_added', 'views', 'videos', 'photos', 'comments',
