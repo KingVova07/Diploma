@@ -4,7 +4,10 @@ import requests      # отправка запросов
 import numpy as np   # матрицы, вектора и линал
 import pandas as pd  # таблички и операции с ними
 import time          # время
-
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+import os
 from tqdm import tqdm                 # мониторинг прогресса
 from fake_useragent import UserAgent  # генерация правдоподобных юзер-агентов
 from bs4 import BeautifulSoup         # очень красивый суп для обработки html
@@ -15,16 +18,26 @@ import socks   # подключение к тору
 import smtplib
 import socket
 import sys
+from datetime import  date,timedelta,datetime
 
 
 path_types = "types.json"
 path_memes = "memes.json"
+path_lifememe = "life_meme.json"
+path_lifememes = "lifememes.json"
 
 with open(path_types, 'r') as f:
     TYPES = json.load(f)
 
 with open(path_memes, 'r') as f:
     MEMES = json.load(f)
+
+with open(path_lifememes, 'r') as f:
+    lifememes = json.load(f)
+
+with open(path_lifememe, 'r') as f:
+    lifememe = json.load(f)
+
 
 New_MEMES = {}
 memes = list(MEMES.keys())
@@ -40,6 +53,84 @@ def checkIP():
     print(soup.find('body').text)
 
 
+def getStatsMeme(meme):
+    meme_page = f'http://knowyourmeme.com/memes/{meme}'
+    response = requests.get(meme_page,
+                            headers={'User-Agent': UserAgent().chrome})
+    html = response.content
+    soup = BeautifulSoup(html, 'html.parser')
+    views = getStats(soup=soup, stats='views')
+    today = date.today()
+    today = str(today)
+    lifememe[meme][today] = views
+    with open(path_lifememe, 'w') as outfile:
+        json.dump(lifememe, outfile)
+    return lifememe[meme]
+
+def graph(popularity,query,predict=False):
+    plt.clf()
+
+    dates = []
+    values = []
+
+    for k, v in popularity.items():
+        k = k.replace("-","")
+        k = datetime.strptime(k, "%Y%m%d").date()
+        date = f"{k.day}.{k.month}"
+        dates.append(date)
+        values.append(v)
+
+    print(dates,values)
+
+    plt.ylabel("Количество просмотров")
+    plt.xlabel("Дата")
+
+    if predict:
+        plt.title("График прогноза на 10 дней")
+        plt.plot(dates, values, color = 'yellow')
+        if os.path.isfile(f'memes\\static\img\{query}_predict.png'):
+            os.remove(f'memes\\static\img\{query}_predict.png')
+        plt.savefig(f'memes\\static\img\{query}_predict.png')
+    else:
+        plt.title("График популярности")
+        plt.plot(dates,values)
+        if os.path.isfile(f'memes\\static\img\{query}_graph.png'):
+            os.remove(f'memes\\static\img\{query}_graph.png')
+
+        plt.savefig(f'memes\\static\img\{query}_graph.png')
+
+
+def predict(data,query):
+    values = []
+
+    for k, v in data.items():
+        values.append(v)
+
+    n = len(data)
+    Dates = [[i] for i in range(n)]
+
+    print(Dates,values)
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        Dates, values
+    )
+
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+    model.score(X_test,y_test)
+    new_dates = [[i] for i in range(n,n+10)]
+    new_values = model.predict(new_dates)
+    new_values = [round(v) for v in new_values]
+
+    today = date.today()
+    predict = {}
+    for i in range(10):
+        predict[str(today + timedelta(days=i+1))] = new_values[i]
+
+    print(new_values)
+    print(predict)
+
+    graph(predict,query,True)
 
 
 
@@ -188,55 +279,61 @@ def getMemeData(meme_page):
 
 
 if __name__ == '__main__':
-    print(len(MEMES))
-    print(len(TYPES))
-
-
-
-
-    final_df = pd.DataFrame(
-    columns=['name', 'image', 'type', 'origin_year',
-             'date_added', 'views', 'videos', 'photos', 'comments',
-             'about', 'origin', 'other_text'])
-
-    checkIP()
-    socks.set_default_proxy(socks.SOCKS5, "localhost",9150)
-    socket.socket = socks.socksocket
-
-
-    for i in range(1,1001):
-
-
-            checkIP()
-
-            memes = Urls_memes(i)
-
-            print(f'page {i}')
-            cnt = 0
-
-            for meme in memes:
-                try:
-                    if "https" in meme:
-                        continue
-                    print(meme)
-                    cnt += 1
-                    data = getMemeData(meme)
-                    if data == "error":
-                        continue
-                    final_df = final_df.append(data, ignore_index=True)
-                except:
-                    continue
-
-            with open(path_types, 'w') as outfile:
-                json.dump(TYPES, outfile)
-
-            with open(path_memes, 'w') as outfile:
-                json.dump(MEMES, outfile)
-
-
-    print(cnt)
-
-
-
-    final_df.to_csv(f'MEMES_{1}_{1001}.csv')
-
+    data = getStatsMeme("doge")
+    print(data)
+    keys = list(data.keys())
+    for key in keys:
+        key = key.replace("-","")
+        print(datetime.strptime(key, "%Y%m%d").date())
+    # print(len(MEMES))
+    # print(len(TYPES))
+    #
+    #
+    #
+    #
+    # final_df = pd.DataFrame(
+    # columns=['name', 'image', 'type', 'origin_year',
+    #          'date_added', 'views', 'videos', 'photos', 'comments',
+    #          'about', 'origin', 'other_text'])
+    #
+    # checkIP()
+    # socks.set_default_proxy(socks.SOCKS5, "localhost",9150)
+    # socket.socket = socks.socksocket
+    #
+    #
+    # for i in range(1,1001):
+    #
+    #
+    #         checkIP()
+    #
+    #         memes = Urls_memes(i)
+    #
+    #         print(f'page {i}')
+    #         cnt = 0
+    #
+    #         for meme in memes:
+    #             try:
+    #                 if "https" in meme:
+    #                     continue
+    #                 print(meme)
+    #                 cnt += 1
+    #                 data = getMemeData(meme)
+    #                 if data == "error":
+    #                     continue
+    #                 final_df = final_df.append(data, ignore_index=True)
+    #             except:
+    #                 continue
+    #
+    #         with open(path_types, 'w') as outfile:
+    #             json.dump(TYPES, outfile)
+    #
+    #         with open(path_memes, 'w') as outfile:
+    #             json.dump(MEMES, outfile)
+    #
+    #
+    # print(cnt)
+    #
+    #
+    #
+    # final_df.to_csv(f'MEMES_{1}_{1001}.csv')
+    #

@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .main import New_MEMES,TYPES
+from .main import New_MEMES,lifememes,getStatsMeme,predict,graph
+from datetime import date,timedelta,datetime
+
 
 
 
 # Create your views here.
 
 def index(request,page = 1):
-    print (page)
     memes = list(New_MEMES.keys())
     memes = memes[10*(page-1):10*page]
     Memes = []
@@ -17,7 +18,6 @@ def index(request,page = 1):
             continue
         pages.append(i)
 
-    print(pages)
     for meme in memes:
         Memes.append((meme,New_MEMES[meme]["image"]))
 
@@ -52,3 +52,47 @@ def memes(request,meme_id):
                         "about": about, "origin": origin,
                         "other_text": other_text
                       })
+
+def life(request):
+
+    memes = list(lifememes.keys())
+    Memes = []
+    for meme in memes:
+        Memes.append((meme,lifememes[meme]))
+
+    return render(request, "memes/life.html",
+                  {
+                      "memes": Memes,
+                  })
+
+def life_meme(request,meme):
+    meme_img = lifememes[meme]
+    meme = meme.replace(" ","-")
+    meme = meme.lower()
+    print(meme)
+    data = getStatsMeme(meme)
+    print(data)
+    days = list(data.keys())
+    Data = {}
+    for day in days:
+        try:
+            tmp = day.replace("-","")
+            today = datetime.strptime(tmp, "%Y%m%d").date()
+            yesterday = today-timedelta(days=1)
+            Data[day] = (data[str(today)]-data[str(yesterday)])
+        except:
+            continue
+
+    graph(Data,meme)
+    predict(Data,meme)
+
+    url_img = f'img/{meme}_graph.png'
+    url1_img = f'img/{meme}_predict.png'
+
+    return render(request, "memes/life_meme.html",
+                  {
+                      "meme" : meme,
+                      "meme_img" : meme_img,
+                      "url_img": url_img,
+                      "url1_img": url1_img
+                  })

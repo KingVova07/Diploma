@@ -17,6 +17,8 @@
          <input type= "submit" value="submit">
     </form>
     <br>
+    <h2><a href = "{% url 'life' %}">Жизненный цикл</a></h2>
+    <br>
     {% for meme in memes %}
         <a href = "{% url 'memes' meme_id=meme.0 %}"><img src={{ meme.1 }} width="128" height="128"></a>
         <a href = "{% url 'memes' meme_id=meme.0 %}">{{ meme.0 }}</a>

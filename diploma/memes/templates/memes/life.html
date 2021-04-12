@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Жизненный цикл</title>
+</head>
+<body>
+    <h1>Мемы которые стоят в наблюдении</h1>
+    {% for meme in memes %}
+        <a href = "{% url 'life_meme' meme=meme.0 %}"><img src={{ meme.1 }} width="128" height="128"></a>
+        <a href = "{% url 'life_meme' meme=meme.0 %}">{{ meme.0 }}</a>
+        <br>
+        <hr>
+    {% endfor %}
+<a href= "{% url 'index_0'%}"> На Главную </a>
+</body>
+</html>

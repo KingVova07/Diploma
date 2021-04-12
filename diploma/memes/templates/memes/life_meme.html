@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ meme }}</title>
+</head>
+<body>
+    <h1>Жизненный цикл {{ meme }}</h1>
+    <img src={{ meme_img }} width="256" height="256">
+    <br>
+    <img src="{% static url_img %}">
+    <br>
+    <img src="{% static url1_img %}">
+    <br>
+    <a href= "{% url 'index_0'%}"> На Главную </a>
+</body>
+</html>
