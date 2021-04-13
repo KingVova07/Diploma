@@ -4,6 +4,8 @@ import requests      # отправка запросов
 import numpy as np   # матрицы, вектора и линал
 import pandas as pd  # таблички и операции с ними
 import time          # время
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
@@ -54,48 +56,68 @@ def checkIP():
 
 
 def getStatsMeme(meme):
-    meme_page = f'http://knowyourmeme.com/memes/{meme}'
-    response = requests.get(meme_page,
-                            headers={'User-Agent': UserAgent().chrome})
-    html = response.content
-    soup = BeautifulSoup(html, 'html.parser')
-    views = getStats(soup=soup, stats='views')
-    today = date.today()
-    today = str(today)
-    lifememe[meme][today] = views
-    with open(path_lifememe, 'w') as outfile:
-        json.dump(lifememe, outfile)
-    return lifememe[meme]
+    try:
+        meme_page = f'http://knowyourmeme.com/memes/{meme}'
+        response = requests.get(meme_page,
+                                headers={'User-Agent': UserAgent().chrome})
+        html = response.content
+        soup = BeautifulSoup(html, 'html.parser')
+        views = getStats(soup=soup, stats='views')
+        today = date.today()
+        today = str(today)
+
+        try:
+            lifememe[meme][today] = views
+        except:
+            lifememe[meme] = {}
+            lifememe[meme][today] = views
+
+        with open(path_lifememe, 'w') as outfile:
+            json.dump(lifememe, outfile)
+        return lifememe[meme]
+
+    except:
+        return lifememe[meme]
+
 
 def graph(popularity,query,predict=False):
     plt.clf()
 
     dates = []
     values = []
-
+    length = len(popularity)
+    tmp = 25 - length
+    print(0)
     for k, v in popularity.items():
-        k = k.replace("-","")
-        k = datetime.strptime(k, "%Y%m%d").date()
-        date = f"{k.day}.{k.month}"
-        dates.append(date)
-        values.append(v)
-
+        if tmp >= 0:
+            k = k.replace("-","")
+            k = datetime.strptime(k, "%Y%m%d").date()
+            date = f"{k.day}.{k.month}"
+            dates.append(date)
+            values.append(v)
+        else:
+            tmp += 1
+    print(1)
     print(dates,values)
 
     plt.ylabel("Количество просмотров")
     plt.xlabel("Дата")
-
+    plt.figure(figsize=(15,7))
+    print(2)
     if predict:
         plt.title("График прогноза на 10 дней")
         plt.plot(dates, values, color = 'yellow')
         if os.path.isfile(f'memes\\static\img\{query}_predict.png'):
             os.remove(f'memes\\static\img\{query}_predict.png')
         plt.savefig(f'memes\\static\img\{query}_predict.png')
+        print(4)
     else:
         plt.title("График популярности")
         plt.plot(dates,values)
         if os.path.isfile(f'memes\\static\img\{query}_graph.png'):
             os.remove(f'memes\\static\img\{query}_graph.png')
+
+        print(3)
 
         plt.savefig(f'memes\\static\img\{query}_graph.png')
 
@@ -110,22 +132,25 @@ def predict(data,query):
     Dates = [[i] for i in range(n)]
 
     print(Dates,values)
-
+    print(-1)
     X_train, X_test, y_train, y_test = train_test_split(
         Dates, values
     )
-
+    print(-3)
     model = LinearRegression()
     model.fit(X_train, y_train)
     model.score(X_test,y_test)
     new_dates = [[i] for i in range(n,n+10)]
     new_values = model.predict(new_dates)
     new_values = [round(v) for v in new_values]
-
+    print(-2)
     today = date.today()
     predict = {}
     for i in range(10):
-        predict[str(today + timedelta(days=i+1))] = new_values[i]
+        if new_values[i] > 0:
+            predict[str(today + timedelta(days=i+1))] = new_values[i]
+        else:
+            predict[str(today + timedelta(days=i + 1))] = 0
 
     print(new_values)
     print(predict)
@@ -277,14 +302,36 @@ def getMemeData(meme_page):
     return data_row
 
 
+def NewMeme(meme):
+    meme1 = meme.replace("  ", " ")
+    meme1 = meme1.replace(" ","-")
+    meme1 = meme1.replace("\"", "")
+    meme1 = meme1.lower()
+    url = f"http://knowyourmeme.com/memes/{meme1}"
+    response = requests.get(url,
+                            headers={'User-Agent': UserAgent().chrome})
+    html = response.content
+    soup = BeautifulSoup(html, 'html.parser')
+    meme_img = get_image_url(soup)
+    lifememes[meme]= meme_img
+    with open(path_lifememes, 'w') as outfile:
+        json.dump(lifememes, outfile)
+
+
 
 if __name__ == '__main__':
     data = getStatsMeme("doge")
     print(data)
     keys = list(data.keys())
-    for key in keys:
-        key = key.replace("-","")
-        print(datetime.strptime(key, "%Y%m%d").date())
+    key = keys[1].replace("-", "")
+    today = datetime.strptime(key, "%Y%m%d").date()
+
+    for i in range(26):
+        print(today-timedelta(days=i))
+
+    # for key in keys:
+    #     key = key.replace("-","")
+    #     print(datetime.strptime(key, "%Y%m%d").date())
     # print(len(MEMES))
     # print(len(TYPES))
     #

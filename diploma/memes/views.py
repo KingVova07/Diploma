@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .main import New_MEMES,lifememes,getStatsMeme,predict,graph
+from .main import New_MEMES,lifememes,getStatsMeme,predict,graph,NewMeme
 from datetime import date,timedelta,datetime
 
 
@@ -55,6 +55,11 @@ def memes(request,meme_id):
 
 def life(request):
 
+    if request.method == "POST":
+        meme = request.POST['meme']
+        NewMeme(meme)
+
+
     memes = list(lifememes.keys())
     Memes = []
     for meme in memes:
@@ -66,8 +71,11 @@ def life(request):
                   })
 
 def life_meme(request,meme):
+    meme1 = meme
     meme_img = lifememes[meme]
+    meme = meme.replace("  ", " ")
     meme = meme.replace(" ","-")
+    meme = meme.replace("\"", "")
     meme = meme.lower()
     print(meme)
     data = getStatsMeme(meme)
@@ -82,16 +90,22 @@ def life_meme(request,meme):
             Data[day] = (data[str(today)]-data[str(yesterday)])
         except:
             continue
+    try:
+        graph(Data,meme)
+        predict(Data,meme)
+        url_img = f'img/{meme}_graph.png'
+        url1_img = f'img/{meme}_predict.png'
+    except Exception as e:
+        print(e)
+        url_img = f'img/no.png'
+        url1_img = f'img/no.png'
 
-    graph(Data,meme)
-    predict(Data,meme)
 
-    url_img = f'img/{meme}_graph.png'
-    url1_img = f'img/{meme}_predict.png'
+
 
     return render(request, "memes/life_meme.html",
                   {
-                      "meme" : meme,
+                      "meme" : meme1,
                       "meme_img" : meme_img,
                       "url_img": url_img,
                       "url1_img": url1_img
