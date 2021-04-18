@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Информация про  {{ meme }} за {{ data.0 }}</title>
+</head>
+<body>
+    <h1> Все ссылки: </h1>
+    {% for link in data.1 %}
+        <a href = {{ link }}> {{ link }}</a>
+        <br>
+    {% endfor %}
+    <hr>
+    <br>
+    <h1> Новые ссылки: </h1>
+     {% for link in data.2 %}
+        <a href = {{ link }}> {{ link }}</a>
+        <br>
+    {% endfor %}
+    <hr>
+    <br>
+    <h1> Устаревшие ссылки: </h1>
+     {% for link in data.3 %}
+        <a href = {{ link }}> {{ link }}</a>
+        <br>
+    {% endfor %}
+    <hr>
+    <br>
+</body>
+</html>

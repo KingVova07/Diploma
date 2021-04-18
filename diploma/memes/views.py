@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .main import New_MEMES,lifememes,getStatsMeme,predict,graph,NewMeme
+from .main import New_MEMES,lifememes,NewMeme,Links
+from .main import predict,graph,Popularity,getStatsMeme
+
 from datetime import date,timedelta,datetime
 
 
@@ -70,6 +72,8 @@ def life(request):
                       "memes": Memes,
                   })
 
+
+
 def life_meme(request,meme):
     meme1 = meme
     meme_img = lifememes[meme]
@@ -77,36 +81,100 @@ def life_meme(request,meme):
     meme = meme.replace(" ","-")
     meme = meme.replace("\"", "")
     meme = meme.lower()
-    print(meme)
+
+    links = Popularity(meme,meme_img)
+
     data = getStatsMeme(meme)
-    print(data)
     days = list(data.keys())
     Data = {}
+
+    Data1 = {}
     for day in days:
         try:
             tmp = day.replace("-","")
             today = datetime.strptime(tmp, "%Y%m%d").date()
             yesterday = today-timedelta(days=1)
             Data[day] = (data[str(today)]-data[str(yesterday)])
+
         except:
             continue
+    days = list(links.keys())
+    for day in days:
+        Data1[day] = len(links[day])
+
+
     try:
         graph(Data,meme)
-        predict(Data,meme)
-        url_img = f'img/{meme}_graph.png'
-        url1_img = f'img/{meme}_predict.png'
+        url_img = f'img/{meme}_0_graph.png'
     except Exception as e:
-        print(e)
         url_img = f'img/no.png'
+
+    try:
+        predict(Data, meme)
+        url1_img = f'img/{meme}_0_predict.png'
+    except:
         url1_img = f'img/no.png'
 
+    try:
+        graph(Data1, meme, id=1)
+        url2_img = f'img/{meme}_1_graph.png'
+    except Exception as e:
+        url2_img = f'img/no.png'
 
 
+    try:
+        predict(Data1, meme, id=1)
+        url3_img = f'img/{meme}_1_predict.png'
+    except Exception as e:
+        url3_img = f'img/no.png'
 
     return render(request, "memes/life_meme.html",
                   {
                       "meme" : meme1,
                       "meme_img" : meme_img,
                       "url_img": url_img,
-                      "url1_img": url1_img
+                      "url1_img": url1_img,
+                      "url2_img": url2_img,
+                      "url3_img": url3_img
                   })
+
+
+def Links_meme(request,meme, day = ""):
+    meme1 = meme
+    meme = meme.replace("  ", " ")
+    meme = meme.replace(" ", "-")
+    meme = meme.replace("\"", "")
+    meme = meme.lower()
+    links = Links[meme]
+    days = list(links.keys())
+    data = []
+
+
+    for i in range(len(days)):
+        if i == 0:
+            data.append((days[i],0,0,0))
+
+        else:
+            new = list(set(links[days[i]]) - set(links[days[i-1]]))
+            old = list(set(links[days[i-1]]) - set(links[days[i]]))
+            data.append((days[i],len(links[days[i]]),len(new),len(old)))
+            if days[i] == day:
+                data = (day,links[day],new,old)
+                break
+
+    if day == "":
+        return render(request,"memes/links.html",
+                      {
+                          "meme" : meme1,
+                          "data": data
+                      })
+
+
+    return render(request, "memes/links_info.html",
+                  {
+                      "meme": meme1,
+                      "data": data
+                  })
+
+
+

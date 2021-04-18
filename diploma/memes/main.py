@@ -27,6 +27,7 @@ path_types = "types.json"
 path_memes = "memes.json"
 path_lifememe = "life_meme.json"
 path_lifememes = "lifememes.json"
+path_links = "links.json"
 
 with open(path_types, 'r') as f:
     TYPES = json.load(f)
@@ -39,6 +40,9 @@ with open(path_lifememes, 'r') as f:
 
 with open(path_lifememe, 'r') as f:
     lifememe = json.load(f)
+
+with open(path_links, 'r') as f:
+    Links = json.load(f)
 
 
 New_MEMES = {}
@@ -80,14 +84,44 @@ def getStatsMeme(meme):
         return lifememe[meme]
 
 
-def graph(popularity,query,predict=False):
+
+def Popularity(meme,url_img):
+    url = 'https://yandex.ru/images/search?source=collections&rpt=imageview&url=' + url_img
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    similar = soup.find_all('a', class_='other-sites__preview-link')
+    links = []
+    for sim in similar:
+        link = sim["href"]
+        if link not in links:
+            links.append(link)
+
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+    today = str(today)
+
+    try:
+        Links[meme][today] = links
+    except:
+        Links[meme] = {}
+        Links[meme][str(yesterday)] = []
+        Links[meme][today] = links
+
+    with open(path_links, 'w') as outfile:
+        json.dump(Links, outfile)
+    return Links[meme]
+
+
+
+
+def graph(popularity,query,predict=False, id = 0):
     plt.clf()
 
     dates = []
     values = []
     length = len(popularity)
     tmp = 25 - length
-    print(0)
+
     for k, v in popularity.items():
         if tmp >= 0:
             k = k.replace("-","")
@@ -97,32 +131,35 @@ def graph(popularity,query,predict=False):
             values.append(v)
         else:
             tmp += 1
-    print(1)
-    print(dates,values)
+
+
 
     plt.ylabel("Количество просмотров")
     plt.xlabel("Дата")
     plt.figure(figsize=(15,7))
-    print(2)
+
+
+    query = f'{query}_{id}'
+
     if predict:
         plt.title("График прогноза на 10 дней")
         plt.plot(dates, values, color = 'yellow')
         if os.path.isfile(f'memes\\static\img\{query}_predict.png'):
             os.remove(f'memes\\static\img\{query}_predict.png')
         plt.savefig(f'memes\\static\img\{query}_predict.png')
-        print(4)
+
     else:
         plt.title("График популярности")
         plt.plot(dates,values)
         if os.path.isfile(f'memes\\static\img\{query}_graph.png'):
             os.remove(f'memes\\static\img\{query}_graph.png')
 
-        print(3)
+
 
         plt.savefig(f'memes\\static\img\{query}_graph.png')
 
 
-def predict(data,query):
+def predict(data,query, id = 0):
     values = []
 
     for k, v in data.items():
@@ -131,19 +168,18 @@ def predict(data,query):
     n = len(data)
     Dates = [[i] for i in range(n)]
 
-    print(Dates,values)
-    print(-1)
+
     X_train, X_test, y_train, y_test = train_test_split(
         Dates, values
     )
-    print(-3)
+
     model = LinearRegression()
     model.fit(X_train, y_train)
     model.score(X_test,y_test)
     new_dates = [[i] for i in range(n,n+10)]
     new_values = model.predict(new_dates)
     new_values = [round(v) for v in new_values]
-    print(-2)
+
     today = date.today()
     predict = {}
     for i in range(10):
@@ -152,10 +188,8 @@ def predict(data,query):
         else:
             predict[str(today + timedelta(days=i + 1))] = 0
 
-    print(new_values)
-    print(predict)
 
-    graph(predict,query,True)
+    graph(predict,query,True,id)
 
 
 

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ meme }}</title>
+</head>
+<body>
+    <h1 align="center">Количество ссылок {{ meme }}</h1>
+    {% for day in data %}
+    <a href = "{% url 'links_info' meme=meme day=day.0 %}">
+        <h3>{{ day.0 }}</h3>
+        Всего ссылок: {{ day.1 }}
+        Новых ссылок за день: {{ day.2 }}
+        Ссылки которые исчезли: {{ day.3 }}
+    </a>
+    <br>
+    <hr>
+    {% endfor %}
+    <a style="position: fixed; bottom : 25px; left : 10px;" href= "{% url 'index_0'%}"> На Главную </a>
+</body>
+</html>
