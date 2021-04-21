@@ -127,8 +127,9 @@ def graph(popularity,query,predict=False, id = 0):
             k = k.replace("-","")
             k = datetime.strptime(k, "%Y%m%d").date()
             date = f"{k.day}.{k.month}"
-            dates.append(date)
-            values.append(v)
+            if v != 0:
+                dates.append(date)
+                values.append(v)
         else:
             tmp += 1
 
