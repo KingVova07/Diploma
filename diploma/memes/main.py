@@ -28,6 +28,7 @@ path_memes = "memes.json"
 path_lifememe = "life_meme.json"
 path_lifememes = "lifememes.json"
 path_links = "links.json"
+path_days = "Days.json"
 
 with open(path_types, 'r') as f:
     TYPES = json.load(f)
@@ -43,6 +44,9 @@ with open(path_lifememe, 'r') as f:
 
 with open(path_links, 'r') as f:
     Links = json.load(f)
+
+with open(path_days, 'r') as f:
+    Days = json.load(f)
 
 
 New_MEMES = {}
@@ -60,6 +64,11 @@ def checkIP():
 
 
 def getStatsMeme(meme):
+    today = date.today()
+    today = str(today)
+    if today in lifememe[meme]:
+        return lifememe[meme]
+
     try:
         meme_page = f'http://knowyourmeme.com/memes/{meme}'
         response = requests.get(meme_page,
@@ -67,8 +76,6 @@ def getStatsMeme(meme):
         html = response.content
         soup = BeautifulSoup(html, 'html.parser')
         views = getStats(soup=soup, stats='views')
-        today = date.today()
-        today = str(today)
 
         try:
             lifememe[meme][today] = views
@@ -83,9 +90,31 @@ def getStatsMeme(meme):
     except:
         return lifememe[meme]
 
+def Update():
+    today = date.today()
+    today = str(today)
+    if today not in Days:
+        Days.append(today)
+        with open(path_days, 'w') as outfile:
+            json.dump(Days, outfile)
+        memes = list(lifememes.keys())
+        for meme in memes:
+            print(1)
+            meme_img = lifememes[meme]
+            meme = meme.replace("  ", " ")
+            meme = meme.replace(" ", "-")
+            meme = meme.replace("\"", "")
+            meme = meme.lower()
+            getStatsMeme(meme)
+            Popularity(meme, meme_img)
+
 
 
 def Popularity(meme,url_img):
+    today = date.today()
+    today = str(today)
+    if today in Links[meme]:
+        return Links[meme]
     url = 'https://yandex.ru/images/search?source=collections&rpt=imageview&url=' + url_img
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')

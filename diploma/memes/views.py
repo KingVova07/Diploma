@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .main import New_MEMES,lifememes,NewMeme,Links
-from .main import predict,graph,Popularity,getStatsMeme
+from .main import predict,graph,Popularity,getStatsMeme,Update
 
 from datetime import date,timedelta,datetime
 
@@ -61,7 +61,7 @@ def life(request):
         meme = request.POST['meme']
         NewMeme(meme)
 
-
+    Update()
     memes = list(lifememes.keys())
     Memes = []
     for meme in memes:
