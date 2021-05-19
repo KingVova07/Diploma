@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ query }}</title>
+</head>
+<body>
+    <h1>5 самых популярных картинок по запросу {{ query }}</h1>
+    {% for url in urls %}
+    <img src={{ url }} width="128" height="128">
+    {% endfor %}
+    <br>
+    <img src="{% static url_img %}">
+    <br>
+    <img src="{% static url1_img %}">
+    <br>
+    <a href= "{% url 'index'%}"> На Главную </a>
+</body>
+</html>
