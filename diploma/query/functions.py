@@ -57,16 +57,16 @@ def graph(popularity,query,predict=False):
     if predict:
         plt.title("График прогноза на 10 дней")
         plt.plot(dates, values, color = 'yellow')
-        if os.path.isfile(f'MySite\\static\img\{query}_predict.png'):
-            os.remove(f'MySite\\static\img\{query}_predict.png')
-        plt.savefig(f'MySite\\static\img\{query}_predict.png')
+        if os.path.isfile(f'query\\static\img\{query}_predict.png'):
+            os.remove(f'query\\static\img\{query}_predict.png')
+        plt.savefig(f'query\\static\img\{query}_predict.png')
     else:
         plt.title("График популярности")
         plt.plot(dates,values)
-        if os.path.isfile(f'MySite\\static\img\{query}_graph.png'):
-            os.remove(f'MySite\\static\img\{query}_graph.png')
+        if os.path.isfile(f'query\\static\img\{query}_graph.png'):
+            os.remove(f'query\\static\img\{query}_graph.png')
 
-        plt.savefig(f'MySite\\static\img\{query}_graph.png')
+        plt.savefig(f'query\\static\img\{query}_graph.png')
 
 
 def predict(data,query):

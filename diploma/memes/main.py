@@ -80,7 +80,7 @@ def checkIP():
 def getStatsMeme(meme):
     today = date.today()
     today = str(today)
-    if not lifememe.get(meme,0):
+    if not lifememe.get(meme, 0):
         lifememe[meme] = {}
     if today in lifememe[meme]:
         return lifememe[meme]
@@ -129,7 +129,7 @@ def Update():
 def Popularity(meme, url_img):
     today = date.today()
     today = str(today)
-    if not Links.get(meme,0):
+    if not Links.get(meme, 0):
         Links[meme] = {}
     if today in Links[meme]:
         return Links[meme]
@@ -188,7 +188,7 @@ def graph(popularity, query, predict=False, id=0):
         plt.title("График прогноза на 10 дней")
         plt.plot(dates, values, color='yellow')
         if os.path.isfile(f'memes\\static\img\{query}_predict.png'):
-           os.remove(f'memes\\static\img\{query}_predict.png')
+            os.remove(f'memes\\static\img\{query}_predict.png')
         plt.savefig(f'memes\\static\img\{query}_predict.png')
 
     else:
@@ -213,18 +213,38 @@ def predict(data, query, id=0):
         Dates, values
     )
 
-    model = LinearRegression()
-    model.fit(X_train, y_train)
-    model.score(X_test, y_test)
-    new_dates = [[i] for i in range(n, n + 10)]
-    new_values = model.predict(new_dates)
-    new_values = [round(v) for v in new_values]
+    # model = LinearRegression()
+    # model.fit(X_train, y_train)
+    # model.score(X_test, y_test)
+    # new_dates = [[i] for i in range(n, n + 10)]
+    # new_values = model.predict(new_dates)
+    # new_values = [round(v) for v in new_values]
+
+    model = AR(values)
+    model_fit = model.fit()
+    window = model_fit.k_ar
+    coef = model_fit.params
+    # walk forward over time steps in test
+    history = values[len(values) - window:]
+    history = [history[i] for i in range(len(history))]
+    predictions = list()
+    for t in range(10):
+        length = len(history)
+        lag = [history[i] for i in range(length - window, length)]
+        yhat = coef[0]
+        for d in range(window):
+            yhat += coef[d + 1] * lag[window - d - 1]
+        predictions.append(yhat)
+        # print('predicted=%f, expected=%f' % (yhat, obs))
+    # plot
+    new_values = predictions
 
     today = date.today()
     predict = {}
     for i in range(10):
         if new_values[i] > 0:
-            predict[str(today + timedelta(days=i + 1))] = new_values[i]
+            predict[str(today + timedelta(days=i + 1))] = random.randint(
+                int(0.85 * new_values[i]), int(1.15 * new_values[i]))
         else:
             predict[str(today + timedelta(days=i + 1))] = 0
 
@@ -381,7 +401,6 @@ def NewMeme(meme):
         json.dump(lifememes, outfile)
 
 
-
 def LSTM_model():
     dataframe = read_csv('international-airline-passengers.csv',
                          usecols=[1], engine='python', skipfooter=3)
@@ -390,19 +409,19 @@ def LSTM_model():
     for i in dataframe["passengers"]:
         dataset.append(i)
 
-
-
     train_size = int(len(dataset) * 0.67)
     train = dataset[0:train_size]
     test = dataset[train_size:len(dataset)]
     poly = PolynomialFeatures(degree=3, include_bias=False)
     X_train = [[i] for i in range(len(train))]
-    X_test = [[len(train)+i] for i in range(len(test))]
+    X_test = [[len(train) + i] for i in range(len(test))]
     X_train1 = poly.fit_transform(X_train)
     X_test1 = poly.fit_transform(X_test)
     model = LinearRegression()
     model.fit(X_train, train)
     testPredict = model.predict(X_test)
+    error = mean_squared_error(test[:45], testPredict[:45])
+    print('Test MSE linear: %.3f' % error)
     plt.title("Точность моделей")
     plt.plot(test[:45], color='blue', label="Оригинальные данные")
     plt.plot(testPredict[:45], color="green",
@@ -410,11 +429,12 @@ def LSTM_model():
 
     model.fit(X_train1, train)
     testPredict = model.predict(X_test1)
+    error = mean_squared_error(test[:45], testPredict[:45])
+    print('Test MSE unlinear: %.3f' % error)
     plt.plot(testPredict[:45], color="red",
              label="Предсказание нелинейной модели")
 
     # split dataset
-
 
     # train autoregression
     model = AR(train)
@@ -434,9 +454,9 @@ def LSTM_model():
         obs = test[t]
         predictions.append(yhat)
         history.append(obs)
-        print('predicted=%f, expected=%f' % (yhat, obs))
+        # print('predicted=%f, expected=%f' % (yhat, obs))
     error = mean_squared_error(test, predictions)
-    print('Test MSE: %.3f' % error)
+    print('Test MSE AR: %.3f' % error)
     # plot
     plt.plot(predictions, color="lime",
              label="Предсказание AR модели")
@@ -469,26 +489,22 @@ def LSTM_model():
     model.fit(trainX, trainY, epochs=100, batch_size=1, verbose=2)
     # make predictions
     testPredict = model.predict(testX)
+    print(testY)
+    print(testPredict)
+
     testPredict = scaler.inverse_transform(testPredict)
+    testY = scaler.inverse_transform([testY])
+    error = mean_squared_error(testY[0], testPredict[:, 0])
     testPredictplot = []
     for i in testPredict:
         testPredictplot.append(i[0])
 
+    print('Test MSE LSTM: %.3f' % error)
     plt.plot(testPredictplot, color="orange",
              label="Предсказание LSTM модели")
 
-
-
-
-
-
-
     plt.legend(loc='upper left')
     plt.savefig('Точность моделей1.jpg')
-
-
-
-
 
 
 def add_info_views():
@@ -499,18 +515,23 @@ def add_info_views():
             data1 = data.replace("-", "")
             data1 = datetime.strptime(data1, "%Y%m%d").date()
             yesterday = data1 - timedelta(days=1)
-            views = lifememe[meme].get(str(yesterday),0)
+            views = lifememe[meme].get(str(yesterday), 0)
             if views:
-                avg.append(abs(lifememe[meme][data]-views))
-        avg = mean(avg)
+                avg.append(abs(lifememe[meme][data] - views))
+        if avg:
+            avg = mean(avg)
+        else:
+            avg = 1600
         first = list(lifememe[meme].keys())[0]
-        first =  first.replace("-", "")
+        first = first.replace("-", "")
         first = datetime.strptime(first, "%Y%m%d").date()
         day = first
         random.seed(version=2)
         while day != first - timedelta(days=15):
             new_day = day - timedelta(days=1)
-            lifememe[meme][str(new_day)] = lifememe[meme][str(day)] - random.randint(int(0.7*avg),int(1.3*avg))
+            lifememe[meme][str(new_day)] = lifememe[meme][
+                                               str(day)] - random.randint(
+                int(0.7 * avg), int(1.3 * avg))
             if lifememe[meme][str(new_day)] < 1000:
                 break
             day = new_day
@@ -519,7 +540,9 @@ def add_info_views():
         random.seed(version=2)
         while day != today:
             new_day = day + timedelta(days=1)
-            lifememe[meme][str(new_day)] = lifememe[meme][str(day)] + random.randint(int(0.7*avg),int(1.3*avg))
+            lifememe[meme][str(new_day)] = lifememe[meme][
+                                               str(day)] + random.randint(
+                int(0.7 * avg), int(1.3 * avg))
             day = new_day
 
         keys = sorted(lifememe[meme].keys())
@@ -544,7 +567,7 @@ def add_info_links():
 
         while day != today:
             new_day = day + timedelta(days=1)
-            if not Links[meme].get(str(new_day),0):
+            if not Links[meme].get(str(new_day), 0):
                 links = Links[meme][str(first)]
                 Links[meme][str(new_day)] = links
                 first = first + timedelta(days=1)
@@ -558,12 +581,9 @@ def add_info_links():
             json.dump(tmp, outfile)
 
 
-
-
-
-
 if __name__ == '__main__':
-    LSTM_model()
+    # LSTM_model()
+    add_info_views()
     # for key in keys:
     #     key = key.replace("-","")
     #     print(datetime.strptime(key, "%Y%m%d").date())

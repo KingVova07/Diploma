@@ -14,15 +14,13 @@ images = {}
 def index(request):
     if request.method == "POST":
         query = request.POST['query']
-        q = Queriesdb(querydb=query)
-        q.save()
         images[query] = {}
         tmp = parse(query)
         queries.append(query)
         for i in range(5):
             images[query][f'url{i}'] = tmp[i]
 
-    return render(request, "MySite/index.html",
+    return render(request, "query/index.html",
     {
         "queries" : queries
     })
@@ -66,7 +64,8 @@ def Query(request,query_id):
     url1_img = f'img/{query_id}_predict.png'
 
 
-    return render(request, "MySite/Query.html",
+
+    return render(request, "query/Query.html",
             {
                       "urls": urls,
                       "query": query_id,
